@@ -34,23 +34,105 @@ function saveLessons(lessons) {
 }
 
 function Logo() {
-  return (
-    <div className="flex items-center gap-3">
-      <div className="grid h-12 w-12 place-items-center rounded-2xl bg-emerald-100 text-2xl">🎧</div>
-      <div>
-        <div className="text-xl font-bold text-emerald-950">ListenPro</div>
-        <div className="text-xs text-slate-500">Aptis Listening System</div>
-      </div>
-    </div>
-  );
-}
-
-function AuthScreen({ onLogin }) {
-  const [mode, setMode] = useState("login");
-  const [form, setForm] = useState({ name: "", email: "", password: "", role: "student" });
-
- async function submit(e) {
+  return (async function submit(e) {
   e.preventDefault();
+
+  if (!form.email || !form.password) {
+    return alert("Vui lòng nhập email và mật khẩu");
+  }
+
+  if (mode === "login") {
+    const { data, error } = await supabase
+      .from("user")
+      .select("*")
+      .eq("email", form.email)
+      .eq("password", form.password)
+      .single();
+
+    if (error || !data) {
+      console.log(error);
+      return alert("Sai email hoặc mật khẩu");
+    }
+
+    if (data.status !== "approved") {
+      return alert("Tài khoản của bạn đang chờ admin duyệt.");
+    }
+
+    return onLogin({
+      name: data.full_name || "Học viên",
+      email: data.email,
+      role: data.role,
+    });
+  }
+
+  const { error } = await supabase
+    .from("user")
+    .insert([
+      {
+        full_name: form.name || "Học viên",
+        email: form.email,
+        password: form.password,
+        role: "student",
+        status: "pending",
+      },
+    ]);
+
+  if (error) {
+    console.log(error);
+    return alert("Lỗi đăng ký");
+  }
+
+  alert("Đăng ký thành công. Vui lòng chờ admin duyệt tài khoản.");
+}{
+  e.preventDefault();
+
+  if (!form.email || !form.password) {
+    return alert("Vui lòng nhập email và mật khẩu");
+  }
+
+  if (mode === "login") {
+    const { data, error } = await supabase
+      .from("user")
+      .select("*")
+      .eq("email", form.email)
+      .eq("password", form.password)
+      .single();
+
+    if (error || !data) {
+      console.log(error);
+      return alert("Sai email hoặc mật khẩu");
+    }
+
+    if (data.status !== "approved") {
+      return alert("Tài khoản của bạn đang chờ admin duyệt.");
+    }
+
+    return onLogin({
+      name: data.full_name || "Học viên",
+      email: data.email,
+      role: data.role,
+    });
+  }
+
+  const { error } = await supabase
+    .from("user")
+    .insert([
+      {
+        full_name: form.name || "Học viên",
+        email: form.email,
+        password: form.password,
+        role: "student",
+        status: "pending",
+      },
+    ]);
+
+  if (error) {
+    console.log(error);
+    return alert("Lỗi đăng ký");
+  }
+
+  alert("Đăng ký thành công. Vui lòng chờ admin duyệt tài khoản.");
+}  e.preventDefault();
 
   if (!form.email || !form.password) {
     return alert("Vui lòng nhập email và mật khẩu");
@@ -122,7 +204,7 @@ alert("Đăng ký thành công. Vui lòng chờ admin duyệt tài khoản.");}
       </div>
     </div>
   );
-}
+
 
 function Layout({ user, onLogout, children }) {
   return (
