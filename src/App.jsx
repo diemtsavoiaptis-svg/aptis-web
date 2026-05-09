@@ -34,130 +34,79 @@ function saveLessons(lessons) {
 }
 
 function Logo() {
-  return (async function submit(e) {
-  e.preventDefault();
+  return (
+    <div className="flex items-center gap-3">
+      <div className="grid h-12 w-12 place-items-center rounded-2xl bg-emerald-100 text-2xl">🎧</div>
+      <div>
+        <div className="text-xl font-bold text-emerald-950">ListenPro</div>
+        <div className="text-xs text-slate-500">Aptis Listening System</div>
+      </div>
+    </div>
+  );
+}
 
-  if (!form.email || !form.password) {
-    return alert("Vui lòng nhập email và mật khẩu");
-  }
+function AuthScreen({ onLogin }) {
+  const [mode, setMode] = useState("login");
+  const [form, setForm] = useState({ name: "", phone: "", email: "", password: "" });
 
-  if (mode === "login") {
-    const { data, error } = await supabase
+  async function submit(e) {
+    e.preventDefault();
+
+    if (!form.email || !form.password) {
+      return alert("Vui lòng nhập email và mật khẩu");
+    }
+
+    if (mode === "register" && (!form.name || !form.phone)) {
+      return alert("Vui lòng nhập họ tên và số điện thoại");
+    }
+
+    if (mode === "login") {
+      const { data, error } = await supabase
+        .from("user")
+        .select("*")
+        .eq("email", form.email)
+        .eq("password", form.password)
+        .single();
+
+      if (error || !data) {
+        console.log(error);
+        return alert("Sai email hoặc mật khẩu");
+      }
+
+      if (data.status !== "approved") {
+        return alert("Tài khoản của bạn đang chờ admin duyệt.");
+      }
+
+      return onLogin({
+        name: data.full_name || "Học viên",
+        email: data.email,
+        phone: data.phone || "",
+        role: data.role,
+      });
+    }
+
+    const { error } = await supabase
       .from("user")
-      .select("*")
-      .eq("email", form.email)
-      .eq("password", form.password)
-      .single();
+      .insert([
+        {
+          full_name: form.name || "Học viên",
+          phone: form.phone,
+          email: form.email,
+          password: form.password,
+          role: "student",
+          status: "pending",
+        },
+      ]);
 
-    if (error || !data) {
+    if (error) {
       console.log(error);
-      return alert("Sai email hoặc mật khẩu");
+      return alert("Lỗi đăng ký");
     }
 
-    if (data.status !== "approved") {
-      return alert("Tài khoản của bạn đang chờ admin duyệt.");
-    }
-
-    return onLogin({
-      name: data.full_name || "Học viên",
-      email: data.email,
-      role: data.role,
-    });
+    alert("Đăng ký thành công. Vui lòng chờ admin duyệt tài khoản.");
+    setMode("login");
+    setForm({ name: "", phone: "", email: "", password: "" });
   }
-
-  const { error } = await supabase
-    .from("user")
-    .insert([
-      {
-        full_name: form.name || "Học viên",
-        email: form.email,
-        password: form.password,
-        role: "student",
-        status: "pending",
-      },
-    ]);
-
-  if (error) {
-    console.log(error);
-    return alert("Lỗi đăng ký");
-  }
-
-  alert("Đăng ký thành công. Vui lòng chờ admin duyệt tài khoản.");
-}{
-  e.preventDefault();
-
-  if (!form.email || !form.password) {
-    return alert("Vui lòng nhập email và mật khẩu");
-  }
-
-  if (mode === "login") {
-    const { data, error } = await supabase
-      .from("user")
-      .select("*")
-      .eq("email", form.email)
-      .eq("password", form.password)
-      .single();
-
-    if (error || !data) {
-      console.log(error);
-      return alert("Sai email hoặc mật khẩu");
-    }
-
-    if (data.status !== "approved") {
-      return alert("Tài khoản của bạn đang chờ admin duyệt.");
-    }
-
-    return onLogin({
-      name: data.full_name || "Học viên",
-      email: data.email,
-      role: data.role,
-    });
-  }
-
-  const { error } = await supabase
-    .from("user")
-    .insert([
-      {
-        full_name: form.name || "Học viên",
-        email: form.email,
-        password: form.password,
-        role: "student",
-        status: "pending",
-      },
-    ]);
-
-  if (error) {
-    console.log(error);
-    return alert("Lỗi đăng ký");
-  }
-
-  alert("Đăng ký thành công. Vui lòng chờ admin duyệt tài khoản.");
-}  e.preventDefault();
-
-  if (!form.email || !form.password) {
-    return alert("Vui lòng nhập email và mật khẩu");
-  }
-
-  const { error } = await supabase
-  .from("user")
-  .insert([
-    {
-      full_name: form.name || "Học viên",
-      email: form.email,
-      password: form.password,
-      role: "student",
-      status: "pending",
-    },
-  ]);
-
-  if (error) {
-    console.log(error);
-    return alert("Lỗi đăng ký");
-  }
-
-  
-
-alert("Đăng ký thành công. Vui lòng chờ admin duyệt tài khoản.");}
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-950 via-slate-950 to-slate-900 p-5 text-white">
@@ -178,33 +127,32 @@ alert("Đăng ký thành công. Vui lòng chờ admin duyệt tài khoản.");}
         <section className="rounded-[2rem] bg-white p-7 text-slate-900 shadow-2xl">
           <Logo />
           <div className="mt-8 flex rounded-2xl bg-slate-100 p-1">
-            <button onClick={() => setMode("login")} className={`flex-1 rounded-xl py-3 font-semibold ${mode === "login" ? "bg-emerald-800 text-white" : "text-slate-500"}`}>Đăng nhập</button>
-            <button onClick={() => setMode("register")} className={`flex-1 rounded-xl py-3 font-semibold ${mode === "register" ? "bg-emerald-800 text-white" : "text-slate-500"}`}>Đăng ký</button>
+            <button type="button" onClick={() => setMode("login")} className={`flex-1 rounded-xl py-3 font-semibold ${mode === "login" ? "bg-emerald-800 text-white" : "text-slate-500"}`}>Đăng nhập</button>
+            <button type="button" onClick={() => setMode("register")} className={`flex-1 rounded-xl py-3 font-semibold ${mode === "register" ? "bg-emerald-800 text-white" : "text-slate-500"}`}>Đăng ký</button>
           </div>
 
           <form onSubmit={submit} className="mt-6 space-y-4">
             {mode === "register" && (
-              <input className="w-full rounded-2xl border p-4 outline-none focus:border-emerald-700" placeholder="Họ tên" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+              <>
+                <input className="w-full rounded-2xl border p-4 outline-none focus:border-emerald-700" placeholder="Họ tên học viên" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+                <input className="w-full rounded-2xl border p-4 outline-none focus:border-emerald-700" placeholder="Số điện thoại" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+              </>
             )}
             <input className="w-full rounded-2xl border p-4 outline-none focus:border-emerald-700" placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
             <input className="w-full rounded-2xl border p-4 outline-none focus:border-emerald-700" placeholder="Mật khẩu" type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
-            <select className="w-full rounded-2xl border p-4 outline-none focus:border-emerald-700" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
-              <option value="student">Tôi là học viên</option>
-              <option value="admin">Tôi là admin</option>
-            </select>
             <button className="w-full rounded-2xl bg-emerald-800 p-4 font-bold text-white hover:bg-emerald-900">
               {mode === "login" ? "Đăng nhập" : "Tạo tài khoản"}
             </button>
           </form>
 
           <div className="mt-5 rounded-2xl bg-amber-50 p-4 text-sm text-amber-800">
-            Demo: nhập email/mật khẩu bất kỳ. Chọn vai trò admin hoặc học viên để xem giao diện khác nhau.
+            Tài khoản mới đăng ký cần được admin duyệt trước khi đăng nhập.
           </div>
         </section>
       </div>
     </div>
   );
-
+}
 
 function Layout({ user, onLogout, children }) {
   return (
@@ -239,6 +187,87 @@ function Layout({ user, onLogout, children }) {
 
 function AdminDashboard({ lessons, setLessons }) {
   const [form, setForm] = useState({ title: "", part: "Part 1", level: "A1-A2", transcript: "", audioFile: null, textFile: null });
+  const [searchEmail, setSearchEmail] = useState("");
+  const [foundUser, setFoundUser] = useState(null);
+  const [searchingUser, setSearchingUser] = useState(false);
+  const [approvedUsers, setApprovedUsers] = useState([]);
+  const [loadingApproved, setLoadingApproved] = useState(false);
+  const [showApprovedPage, setShowApprovedPage] = useState(false);
+
+  async function searchUserByEmail(e) {
+    e.preventDefault();
+
+    const email = searchEmail.trim().toLowerCase();
+    if (!email) {
+      return alert("Vui lòng nhập Gmail học viên cần tra");
+    }
+
+    setSearchingUser(true);
+    setFoundUser(null);
+
+    const { data, error } = await supabase
+      .from("user")
+      .select("id, full_name, phone, email, created_at, role, status")
+      .eq("email", email)
+      .eq("role", "student")
+      .maybeSingle();
+
+    setSearchingUser(false);
+
+    if (error) {
+      console.log(error);
+      return alert("Lỗi tra cứu học viên");
+    }
+
+    if (!data) {
+      return alert("Không tìm thấy học viên với Gmail này");
+    }
+
+    setFoundUser(data);
+  }
+
+  async function approveUser(userId) {
+    const { error } = await supabase
+      .from("user")
+      .update({ status: "approved" })
+      .eq("id", userId);
+
+    if (error) {
+      console.log(error);
+      alert("Lỗi duyệt tài khoản");
+      return;
+    }
+
+    alert("Đã duyệt tài khoản");
+    setFoundUser((prev) => prev ? { ...prev, status: "approved" } : prev);
+    loadApprovedUsers();
+  }
+
+  async function loadApprovedUsers() {
+    setLoadingApproved(true);
+
+    const { data, error } = await supabase
+      .from("user")
+      .select("id, full_name, phone, email, created_at, role, status")
+      .eq("role", "student")
+      .eq("status", "approved")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.log(error);
+      alert("Lỗi tải danh sách học viên đã duyệt");
+      setLoadingApproved(false);
+      return;
+    }
+
+    setApprovedUsers(data || []);
+    setLoadingApproved(false);
+  }
+
+  function openApprovedPage() {
+    setShowApprovedPage(true);
+    loadApprovedUsers();
+  }
 
   function addLesson(e) {
     e.preventDefault();
@@ -268,8 +297,87 @@ function AdminDashboard({ lessons, setLessons }) {
     saveLessons(updated);
   }
 
+  if (showApprovedPage) {
+    return (
+      <div className="p-5">
+        <section className="rounded-3xl bg-white p-6 shadow-sm">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h2 className="text-2xl font-bold">Học viên đã được duyệt</h2>
+              <p className="mt-2 text-slate-500">Trang này chỉ dùng để xem lại các tài khoản học viên đã được phép đăng nhập.</p>
+            </div>
+            <div className="flex gap-3">
+              <button type="button" onClick={loadApprovedUsers} className="rounded-2xl border px-4 py-3 font-semibold hover:bg-slate-50">Tải lại</button>
+              <button type="button" onClick={() => setShowApprovedPage(false)} className="rounded-2xl bg-emerald-800 px-4 py-3 font-bold text-white hover:bg-emerald-900">Quay lại</button>
+            </div>
+          </div>
+
+          <div className="mt-5 space-y-3">
+            {loadingApproved && <p className="rounded-2xl bg-slate-50 p-4 text-slate-500">Đang tải danh sách học viên đã duyệt...</p>}
+
+            {!loadingApproved && approvedUsers.length === 0 && (
+              <p className="rounded-2xl bg-slate-50 p-4 text-slate-500">Chưa có học viên nào được duyệt.</p>
+            )}
+
+            {!loadingApproved && approvedUsers.map((student) => (
+              <div key={student.id} className="rounded-2xl border p-4">
+                <h3 className="font-bold">{student.full_name || "Học viên"}</h3>
+                <p className="mt-1 text-sm text-slate-500">{student.email}</p>
+                <p className="mt-1 text-sm text-slate-500">SĐT: {student.phone || "Chưa có"}</p>
+                <p className="mt-1 text-xs text-emerald-700">Trạng thái: đã duyệt</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+    );
+  }
+
   return (
     <div className="grid gap-6 p-5 xl:grid-cols-[420px_1fr]">
+      <section className="rounded-3xl bg-white p-6 shadow-sm xl:col-span-2">
+        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          <div>
+            <h2 className="text-2xl font-bold">Duyệt học viên bằng Gmail</h2>
+            <p className="mt-2 text-slate-500">Nhập đúng Gmail học viên đã đăng ký để xem họ tên, số điện thoại và trạng thái. Nếu tài khoản đang chờ duyệt, bạn bấm Duyệt để cho phép đăng nhập.</p>
+          </div>
+          <button type="button" onClick={openApprovedPage} className="rounded-2xl border px-4 py-3 font-semibold hover:bg-slate-50">Xem học viên đã duyệt</button>
+        </div>
+
+        <form onSubmit={searchUserByEmail} className="mt-5 flex flex-col gap-3 md:flex-row">
+          <input
+            className="min-w-0 flex-1 rounded-2xl border p-4 outline-none focus:border-emerald-700"
+            placeholder="Nhập Gmail học viên, ví dụ: student@gmail.com"
+            value={searchEmail}
+            onChange={(e) => setSearchEmail(e.target.value)}
+          />
+          <button className="rounded-2xl bg-emerald-800 px-6 py-4 font-bold text-white hover:bg-emerald-900">
+            {searchingUser ? "Đang tra..." : "Tra Gmail"}
+          </button>
+        </form>
+
+        {foundUser && (
+          <div className="mt-5 rounded-2xl border p-5">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div>
+                <h3 className="font-bold">{foundUser.full_name || "Học viên"}</h3>
+                <p className="mt-1 text-sm text-slate-500">{foundUser.email}</p>
+                <p className="mt-1 text-sm text-slate-500">SĐT: {foundUser.phone || "Chưa có"}</p>
+                <p className={`mt-1 text-xs ${foundUser.status === "approved" ? "text-emerald-700" : "text-amber-700"}`}>
+                  Trạng thái: {foundUser.status === "approved" ? "đã duyệt" : "chờ duyệt"}
+                </p>
+              </div>
+
+              {foundUser.status === "approved" ? (
+                <span className="rounded-2xl bg-emerald-50 px-5 py-3 font-bold text-emerald-800">Đã duyệt</span>
+              ) : (
+                <button type="button" onClick={() => approveUser(foundUser.id)} className="rounded-2xl bg-emerald-800 px-5 py-3 font-bold text-white hover:bg-emerald-900">Duyệt</button>
+              )}
+            </div>
+          </div>
+        )}
+      </section>
+
       <section className="rounded-3xl bg-white p-6 shadow-sm">
         <h2 className="text-2xl font-bold">Upload bài Listening</h2>
         <p className="mt-2 text-slate-500">Mỗi bộ gồm 1 file ghi âm và 1 file text sẽ tạo thành 1 bài test mới.</p>
